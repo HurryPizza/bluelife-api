@@ -18,6 +18,11 @@ jobs:
       - name: Create .env file
         run: |
           echo "NODE_ENV=production" >> .env
+          echo "MYSQL_DATABASE_HOST=${{ secrets.MYSQL_DATABASE_HOST }}" >> .env
+          echo "MYSQL_DATABASE_PORT=${{ secrets.MYSQL_DATABASE_PORT }}" >> .env
+          echo "MYSQL_DATABASE_NAME=${{ secrets.MYSQL_DATABASE_NAME }}" >> .env
+          echo "MYSQL_DATABASE_USER=${{ secrets.MYSQL_DATABASE_USER }}" >> .env
+          echo "MYSQL_DATABASE_PASSWORD=${{ secrets.MYSQL_DATABASE_PASSWORD }}" >> .env
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
