@@ -1,0 +1,60 @@
+name: build and deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=production" >> .env
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: no
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Backend Amazon ECR
+        id: build-be-image
+        run: |
+          docker build -t bluewhale-api .
+          docker tag bluewhale-api:latest 953799088616.dkr.ecr.ap-northeast-2.amazonaws.com/bluewhale-api:latest
+          docker push 953799088616.dkr.ecr.ap-northeast-2.amazonaws.com/bluewhale-api:latest
+
+  dev:
+    name: Deploy bluewhale-api-server
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 953799088616.dkr.ecr.ap-northeast-2.amazonaws.com
+            sudo docker image prune -a -f
+            docker pull 953799088616.dkr.ecr.ap-northeast-2.amazonaws.com/bluewhale-api:latest
+            sudo docker stop bluewhale-api
+            sudo docker rm bluewhale-api
+            sudo docker run --name "bluewhale-api" -d --restart always -p 3000:3000 953799088616.dkr.ecr.ap-northeast-2.amazonaws.com/bluewhale-api:latest
