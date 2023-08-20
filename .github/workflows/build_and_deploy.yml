@@ -24,7 +24,6 @@ jobs:
           echo "MYSQL_DATABASE_USER=${{ secrets.PROD_DATABASE_USER }}" >> .env
           echo "MYSQL_DATABASE_PASSWORD=${{ secrets.PROD_DATABASE_PASSWORD }}" >> .env
 
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
