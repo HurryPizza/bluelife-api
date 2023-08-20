@@ -24,6 +24,10 @@ jobs:
           echo "MYSQL_DATABASE_USER=${{ secrets.PROD_DATABASE_USER }}" >> .env
           echo "MYSQL_DATABASE_PASSWORD=${{ secrets.PROD_DATABASE_PASSWORD }}" >> .env
 
+      - name: Create firebaseSDK file
+        run: |
+          echo "${{ secrets.FIREBASE_SDK}}" >> firebaseSDK.json
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
